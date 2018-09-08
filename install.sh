@@ -1,7 +1,7 @@
 echo "installing wifi led service..."
 
-touch /etc/systemd/wifi-led.service
-cat > /etc/systemd/wifi-led.service <<EOL
+touch /etc/systemd/system/wifi-led.service
+cat > /etc/systemd/system/wifi-led.service <<EOL
 [Unit]
 Description=Service to LED and flash LED on GPIO 23
 After=multi-user.target
@@ -12,14 +12,15 @@ ExecStart=/usr/bin/python /etc/wifi-led/wifi-led.py
 WantedBy=multi-user.target
 EOL
 
-chmod +x /etc/systemd/wifi-led.service
+chmod +x /etc/systemd/system/wifi-led.service
 
 sudo systemctl enable wifi-led.service
 
 echo "installing wifi led service Script..."
 
-touch /etc/shutdown/wifi-led.py
-cat > /etc/shutdown/wifi-led.py <<EOL
+mkdir /etc/wifi-led/
+touch /etc/wifi-led/wifi-led.py
+cat > /etc/wifi-led/wifi-led.py <<EOL
 #WIFI Led Service for Raspberry PI
 #Switch on GPIO 23 if google is contactable, off if not
 import RPi.GPIO as GPIO
@@ -48,4 +49,6 @@ finally:
     GPIO.cleanup()
 EOL
 
-echo "Done, ensure you have your switch pulling GPIO low when pressed and high when not..."
+service wifi-led start
+
+echo "Done, Service Setup and started, your LED should be on providing you have internet access"
