@@ -22,7 +22,7 @@ mkdir /etc/wifi-led/
 touch /etc/wifi-led/wifi-led.py
 cat > /etc/wifi-led/wifi-led.py <<EOL
 #WIFI Led Service for Raspberry PI
-#Switch on GPIO 23 if google is contactable, off if not
+#LED comes on if Packets recieved changes, in this case a change of more than 2
 import RPi.GPIO as GPIO
 import urllib2
 import time
