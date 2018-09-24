@@ -27,26 +27,52 @@ import RPi.GPIO as GPIO
 import urllib2
 import time
 
-def internet_on():
-    try:
-        urllib2.urlopen('http://216.58.192.142', timeout=1)
-        return True
-    except urllib2.URLError as err:
-        return False
+def getBytesRec():
+        lines = open("/proc/net/dev", "r").readlines()
 
-GPIO.setmode(GPIO.BCM)
+        columnLine = lines[1]
+        _, receiveCols , transmitCols = columnLine.split("|")
+        receiveCols = map(lambda a:"recv_"+a, receiveCols.split())
+        transmitCols = map(lambda a:"trans_"+a, transmitCols.split())
 
-try:
-    while True:
-        if internet_on() is not True:
-                GPIO.output(23,GPIO.LOW)
-        else:
-                GPIO.setup(23,GPIO.OUT)
-                GPIO.output(23,GPIO.HIGH)
-        time.sleep(10)
+        cols = receiveCols+transmitCols
 
-finally:
-    GPIO.cleanup()
+        faces = {}
+        for line in lines[2:]:
+                if line.find(":") < 0: continue
+                face, data = line.split(":")
+                faceData = dict(zip(cols, data.split()))
+                faces[face] = faceData
+
+        return faces[' wlan0']['recv_packets']
+
+
+def run():
+
+        GPIO.setmode(GPIO.BCM)
+        bytesLast = 0
+
+        try:
+            while True:
+
+                bytesRec = getBytesRec()
+
+                int(bytesRec) - int(bytesLast)
+
+                if(int(bytesRec) - int(bytesLast) < 2):
+                        GPIO.output(23,GPIO.LOW)
+                else:
+                        GPIO.setup(23,GPIO.OUT)
+                        GPIO.output(23,GPIO.HIGH)
+                        bytesLast = bytesRec
+                time.sleep(0.1)
+
+        finally:
+            GPIO.cleanup()
+
+
+run()
+
 EOL
 
 service wifi-led start
